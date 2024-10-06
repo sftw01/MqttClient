@@ -1,0 +1,163 @@
+﻿@using MqttClient.Client.Class
+
+
+<MudItem xs="12" sm="4" md="4">
+    <MudPaper Elevation="3" Class="pa-4" Style="height: 600px; background-color: #f8f9f9; display: flex; flex-direction: column;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <MudText Typo="Typo.h5">Action Log:</MudText>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ClearConsole" Style="min-width: 30px; width: 30px; height: 30px;">
+                <MudIcon Icon="@Icons.Material.Filled.Delete" />
+            </MudButton>
+        </div>
+
+        <MudDivider Class="my-2" />
+
+        <div>
+            <MudPaper Style="margin: 10px; height:450px;">
+                <div style="overflow-y: auto;">
+                    <ul style="list-style-type: none; padding: 0;">
+                        @if (MessagesLog.Count == 0)
+                        {
+                            <div Class="pa-4" Style="display: flex; justify-content: center; align-items: center; margin-top: 150px;">
+                                <MudAlert Severity="Severity.Normal" Variant="Variant.Filled">Logs no available.</MudAlert>
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var message in MessagesLog)
+                            {
+                                <MudAlert Severity="@message.Severity" Variant="Variant.Outlined" Dense="true" Class="my-2" ShowCloseIcon="false">
+                                    @message.Title: @message.Message
+                                </MudAlert>
+                            }
+                        }
+                    </ul>
+                </div>
+            </MudPaper>
+        </div>
+
+
+        <MudDivider Class="my-2" Style="margin-bottom: 20px;" />
+
+        <div Style="margin-top: auto; height: 40px; ">
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 100%; padding: 0 10px;">
+                <div style="opacity: @_successOpacity">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" Style="position: relative; padding-left: 50px;" OnClick="OnClickSuccess">
+                        <span class="material-symbols-outlined" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: green; font-size: 20px; cursor: pointer;">
+                            check_circle
+                        </span>
+                        Success
+                    </MudButton>
+                </div>
+
+                <div style="opacity: @_infoOpacity">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small" Style="position: relative; padding-left: 50px;" OnClick="OnClickInfo">
+                        <span class="material-symbols-outlined" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: blue; font-size: 20px; cursor: pointer;">
+                            info
+                        </span>
+                        Info
+                    </MudButton>
+                </div>
+
+                <div style="opacity: @_warningOpacity">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" Size="Size.Small" Style="position: relative; padding-left: 50px;" OnClick="OnClickWarning">
+                        <span class="material-symbols-outlined" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: orange; font-size: 20px; cursor: pointer;">
+                            warning
+                        </span>
+                        Warning
+                    </MudButton>
+                </div>
+
+                <div style="opacity: @_errorOpacity">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" Style="position: relative; padding-left: 50px;" OnClick="OnClickError">
+                        <span class="material-symbols-outlined" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: red; font-size: 20px; cursor: pointer;">
+                            error
+                        </span>
+                        Error
+                    </MudButton>
+                </div>
+            </div>
+        </div>
+    </MudPaper>
+</MudItem>
+
+
+
+@code {
+
+    //for storage button state
+    public bool _succcessBtn { get; set; } = true;
+    private bool _infoBtn { get; set; } = true;
+    private bool _warningBtn { get; set; } = true;
+    private bool _errorBtn { get; set; } = true;
+
+    private string _successOpacity = "1";
+    private string _infoOpacity = "1";
+    private string _warningOpacity = "1";
+    private string _errorOpacity = "1";
+
+
+
+    public List<MessageLog> MessagesLog { get; set; } = new List<MessageLog>();
+
+
+    //random message log
+    private List<MessageLog> _MessagesLog = new List<MessageLog>
+    {
+        new MessageLog { Title = "Success", Message = "This is a success message", Severity = Severity.Success },
+        new MessageLog { Title = "Info", Message = "This is an info message", Severity = Severity.Info },
+        new MessageLog { Title = "Warning", Message = "This is a warning message", Severity = Severity.Warning },
+        new MessageLog { Title = "Error", Message = "This is an error message", Severity = Severity.Error }
+    };
+
+
+
+
+    //for invoked from parents to add a new message to the log
+    public void AddMessage(MessageLog message)
+    {
+        //MessagesLog.Add(message);
+        Console.WriteLine("Message added to log");
+        StateHasChanged();
+    }
+
+
+
+    protected override void OnInitialized()
+    {
+        MessagesLog = _MessagesLog;
+        StateHasChanged();
+    }
+
+
+    private void ClearConsole()
+    {
+        MessagesLog.Clear();
+    }
+
+    private void OnClickSuccess()
+    {
+        _succcessBtn = !_succcessBtn;
+        _successOpacity = _succcessBtn ? "1" : "0.2";
+    }
+
+    private void OnClickInfo()
+    {
+        _infoBtn = !_infoBtn;
+        _infoOpacity = _infoBtn ? "1" : "0.2";
+    }
+
+    private void OnClickWarning()
+    {
+        _warningBtn = !_warningBtn;
+        _warningOpacity = _warningBtn ? "1" : "0.2";
+    }
+
+    private void OnClickError()
+    {
+        _errorBtn = !_errorBtn;
+        _errorOpacity = _errorBtn ? "1" : "0.2";
+    }
+
+}

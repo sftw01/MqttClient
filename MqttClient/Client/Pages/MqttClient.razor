@@ -1,0 +1,500 @@
+﻿@using global::MqttClient.Client.Class
+@using global::MqttClient.Client.Services
+@using global::MqttClient.Shared
+
+@using System.Text.Json;
+@using Newtonsoft.Json;
+@using global::MqttClient.Client.Class;
+@using global::MqttClient.Client.Components;
+
+
+
+@page "/MqttClient"
+
+
+
+@inject NavigationManager NavigationManager
+@inject MqttHubService MqttHubService
+
+
+<br />
+<br />
+
+
+
+<div style="margin: 0 20px;">
+    <MudGrid>
+
+
+        @* <LogList @ref="logListComponent"/> *@
+        <LogList/>
+
+
+
+        <MudItem xs="12" sm="3" md="3">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 300px; background-color: #f8f9f9;">
+                <MudTextField Label="Topic" @bind-Value="Topic" />
+                <MudTextField Label="Payload" @bind-Value="Payload" Lines="6" />
+                <br />
+                <div style="display: flex; justify-content: space-between;">
+                    <MudButton EndIcon="@Icons.Material.Filled.Send" Variant="Variant.Filled" Color="Color.Success" OnClick="SendMessage" Style="width: 45%;">Send message</MudButton>
+                    <MudButton EndIcon="@Icons.Material.Filled.AddTask" Variant="Variant.Filled" Color="Color.Info" OnClick="StartSubscrible" Style="width: 45%;">Start Subscribe</MudButton>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+
+        <MudItem xs="12" sm="5" md="5">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 300px; background-color: #839192; color: white; display: flex; justify-content: center; align-items: center;">
+                <MudText Typo="Typo.h4">This feature is not</MudText>
+            </MudPaper>
+        </MudItem>
+
+
+         <MudItem xs="12" sm="4" md="4">
+             <MudPaper Elevation="3" Class="pa-4" Style="height: 600px; background-color: #f8f9f9;">
+                 <div style="display: flex; justify-content: space-between; align-items: center;">
+                     <MudText Typo="Typo.h5">Action Log:</MudText>
+                     <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ClearConsole" Style="min-width: 30px; width: 30px; height: 30px;">
+                         <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                     </MudButton>
+                 </div>
+                 <MudDivider Class="my-2" />
+                 <div style="overflow-y: auto; height: 230px; f">
+                     <ul style="list-style-type: none; padding: 0;">
+
+
+                         @if (MessagesLog.Count == 0)
+                         {
+                             <div Class="pa-4" Style="display: flex; justify-content: center; align-items: center; margin-top: 50px;">
+                                 <MudAlert Severity="Severity.Normal" Variant="Variant.Filled">No logs available.</MudAlert>
+                             </div>
+                         }
+
+                         else
+                         {
+
+                             foreach (var message in MessagesLog)
+                             {
+                                 <MudAlert Severity="@message.Severity" Variant="Variant.Outlined" Dense="true" Class="my-2" ShowCloseIcon="false">
+                                     @message.Title: @message.Message
+                                 </MudAlert>
+                             }
+                         }
+
+                     </ul>
+                 </div>
+             </MudPaper>
+         </MudItem>
+
+
+        <MudItem xs="12" sm="6" md="6">
+            <MudPaper Elevation="3" Class="pa-4" Style="background-color: #f8f9f9;">
+
+                <MudGrid>
+
+                    <ButtonIncDec State="@State" IconOn="home" StateChanged="OnStateChanged" />
+
+                    <ButtonIcon State="@State" IconOn="play_circle" IconOff="pause_circle" ColorOn="green" ColorOff="orange" StateChanged="OnStateChanged" />
+
+                    <ButtonDisplay State="@State" Value="72" IconOn="power" IconOff="power_off" ColorOff="yellow" ColorOn="green" Status=true StateChanged="OnStateChanged" />
+                    <ButtonDisplay State="@State" Value="18" IconOn="power" IconOff="power_off" ColorOff="yellow" ColorOn="green" Status=false StateChanged="OnStateChanged" />
+
+                    <ButtonIconSm State="@State" Icon="wifi" Color="white" StateChanged="OnStateChanged" />
+                    <ButtonIconSm State="edit" Icon="water_drop" Color="blue" StateChanged="OnStateChanged" />
+                    <ButtonIconSm State="lock" Icon="cloudy_snowing" Color="white" StateChanged="OnStateChanged" />
+
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</div>
+
+
+
+@code {
+
+    //random message log
+    public MessageLog messageLog1 = new MessageLog { Title = "wiadomosc:", Message = $"Temperature: 37", Severity = Severity.Warning };
+
+    public string State { get; set; } = "normal";
+    private bool _FanStatusSimulate = true;
+    private bool _LightStatusSimulate = true;
+
+    public List<MessageLog> MessagesLog { get; set; } = new List<MessageLog>();
+
+
+    private LogList logListComponent; 
+
+
+
+    private List<MessageLog> logs = new List<MessageLog>
+    {
+        new MessageLog { Title = "Initial", Message = "Initial log", Severity = Severity.Info }
+    };
+
+
+    public bool AlarmOn { get; set; }
+
+    private readonly ChartOptions options = new ChartOptions
+        {
+            ShowLegend = false,
+        };
+
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+        new ChartSeries() { Name = "Temperatura", Data = new double[20] },
+        new ChartSeries() { Name = "Wilgotnosc", Data = new double[] { 90, 79, 72, 69, 62, 62, 55, 65, 70 }  },
+    };
+    public string[] XAxisLabels = { "", "", "-18h", "", "", "", "-14h", "", "", "", "-10h", "", "", "", "-6h", "", "", "", "-1h" };
+
+
+    private List<double> HumidityHistory = new List<double>();
+    private List<double> TemperatureHistory = new List<double>();
+
+   
+
+
+    void OnClickMenu(InterpolationOption interpolationOption)
+    {
+        options.InterpolationOption = interpolationOption;
+        StateHasChanged();
+    }
+
+
+
+
+    private double Temperature { get; set; } = 25.0; //
+    private double Humidity { get; set; } = 78.0; //
+
+
+    private bool LightStatus { get; set; }  //
+    private double LightIntensity { get; set; } = 50.0; //
+
+    private bool FanStatus { get; set; } = false; //
+    private double FanSpeed { get; set; } = 50.0; // P
+
+    private string Topic { get; set; } = "mirek";
+    private string Payload { get; set; } = "";
+
+    private HubConnection? hubConnection = null;
+
+    MqttHubService mqttHubService = default!;
+
+    private TemperatureDto temperatureDto = new TemperatureDto();
+
+    public class MqttDataDto
+    {
+        public MqttTypePackage mqttTypePackage { get; set; }
+        public string Data { get; set; }
+    }
+
+    public class TemperatureDto
+    {
+        public MqttTypePackage mqttTypePackage = MqttTypePackage.Temperature;
+        public int Id { get; set; }
+
+        public double Temperature { get; set; }
+    }
+
+    public class LightDto
+    {
+        public MqttTypePackage mqttTypePackage = MqttTypePackage.Light;
+        public int Id { get; set; }
+
+        public bool LightStatus { get; set; }
+        public double LightIntensity { get; set; }
+    }
+
+    public class HumidityDto
+    {
+        public MqttTypePackage mqttTypePackage = MqttTypePackage.Humidity;
+        public int Id { get; set; }
+
+        public double Humidity { get; set; }
+    }
+
+    public class FanDto
+    {
+        public MqttTypePackage mqttTypePackage = MqttTypePackage.Fan;
+        public int Id { get; set; }
+
+        public bool FanStatus { get; set; }
+        public double FanSpeed { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //add 9 times 0 to the list
+        for (int i = 0; i < 20; i++)
+        {
+            HumidityHistory.Add(0);
+            TemperatureHistory.Add(0);
+        }
+
+        //create service instance and subscribe to the event
+        mqttHubService = new MqttHubService(NavigationManager);
+
+        //add handler to the event when message received
+        mqttHubService.OnMessageReceiveds += myewent;
+
+        logListComponent = new LogList();
+
+
+        options.InterpolationOption = InterpolationOption.NaturalSpline;
+        //options.YAxisFormat = "c1";`
+
+        await Task.Run(() =>
+        {
+
+        });
+
+    }
+
+
+
+    private void myewent(MqttMessageDto receivedMessage)
+    {
+        try
+        {
+            Console.WriteLine($"Browser Received: T: {receivedMessage.Topic}, P: {receivedMessage.Payload}");
+
+            var mqttDataDto = JsonConvert.DeserializeObject<MqttDataDto>(receivedMessage.Payload);
+
+
+            switch (mqttDataDto.mqttTypePackage)
+            {
+                case MqttTypePackage.Temperature:
+                    if (!string.IsNullOrEmpty(mqttDataDto.Data))
+                    {
+                        var temperatureDto = JsonConvert.DeserializeObject<TemperatureDto>(mqttDataDto.Data);
+                        Temperature = temperatureDto?.Temperature ?? 0;
+
+                        // add to history list and keep only 20 values for the chart purpose
+                        TemperatureHistory.Add(Temperature);
+                        if (TemperatureHistory.Count > 20)
+                        {
+                            TemperatureHistory.RemoveAt(0); //
+                        }
+
+                        Series[1].Data = TemperatureHistory.ToArray();
+                    }
+                    else
+                    {
+                        Temperature = 0;
+                    }
+
+                    //add new message log
+                    MessageLog messageLog = new MessageLog { Title = "Received temperature:", Message = $"Temperature: {Temperature}", Severity = Severity.Info };
+                    MessagesLog.Add(messageLog);
+                    // logs.AddMessage(messageLog);
+
+                    break;
+
+                case MqttTypePackage.Light:
+                    if (!string.IsNullOrEmpty(mqttDataDto.Data))
+                    {
+                        var lightDto = JsonConvert.DeserializeObject<LightDto>(mqttDataDto.Data);
+                        LightStatus = lightDto?.LightStatus ?? false; //
+                        LightIntensity = lightDto?.LightIntensity ?? 0; //
+                    }
+                    else
+                    {
+                        LightStatus = false; //
+                        LightIntensity = 0; //
+                    }
+
+                    //add new message log
+                    MessageLog messageLogLight = new MessageLog { Title = "Received light:", Message = $"LightStatus: {LightStatus}, LightIntensity: {LightIntensity}", Severity = Severity.Info };
+                    MessagesLog.Add(messageLogLight);
+                    // logs.AddMessage(messageLogLight);
+
+
+                    break;
+
+                case MqttTypePackage.Humidity:
+                    if (!string.IsNullOrEmpty(mqttDataDto.Data))
+                    {
+                        var humidityDto = JsonConvert.DeserializeObject<HumidityDto>(mqttDataDto.Data);
+                        Humidity = humidityDto?.Humidity ?? 0; //
+
+                        // add to history list and keep only 20 values for the chart purpose
+                        HumidityHistory.Add(Humidity);
+                        if (HumidityHistory.Count > 20)
+                        {
+                            HumidityHistory.RemoveAt(0); //
+                        }
+
+                        Series[0].Data = HumidityHistory.ToArray();
+                    }
+                    else
+                    {
+                        Humidity = 0; //
+                    }
+
+                    //add new message log
+                    MessageLog messageLogHumidity = new MessageLog { Title = "Received humidity:", Message = $"Humidity: {Humidity}", Severity = Severity.Info };
+                    MessagesLog.Add(messageLogHumidity);
+                    // logs.AddMessage(messageLogHumidity);
+
+
+                    break;
+
+                case MqttTypePackage.Fan:
+                    if (!string.IsNullOrEmpty(mqttDataDto.Data))
+                    {
+                        var fanDto = JsonConvert.DeserializeObject<FanDto>(mqttDataDto.Data);
+                        FanStatus = fanDto?.FanStatus ?? false; //
+                        FanSpeed = fanDto?.FanSpeed ?? 0; //
+                    }
+                    else
+                    {
+                        FanStatus = true; //
+                        FanSpeed = 0; //
+                    }
+
+                    //add new message log
+                    MessageLog messageLogFan = new MessageLog { Title = "Received fan:", Message = $"FanStatus: {FanStatus}, FanSpeed: {FanSpeed}", Severity = Severity.Info };
+                    MessagesLog.Add(messageLogFan);
+                    // logs.AddMessage(messageLogFan);
+
+
+                    break;
+
+                default:
+                    //
+                    Console.WriteLine("Nieznany typ pakietu MQTT");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            //add new message log
+            MessageLog messageLogError = new MessageLog { Title = "Unknow message", Message = $"M: {receivedMessage.Payload} ", Severity = Severity.Warning };
+            MessagesLog.Add(messageLogError);
+            // logs.AddMessage(messageLogError);
+
+
+            Console.WriteLine($"Błąd przetwarzania wiadomości MQTT: Brak poprawnego formatu: {ex.Message}");
+        }
+        finally
+        {
+            //after processing, state has changed
+            StateHasChanged();
+        }
+    }
+
+
+
+    async Task SendMessage()
+    {
+        await mqttHubService.SendMessage(new MqttMessageDto { Topic = Topic, Payload = Payload });
+        MessagesLog.Add(new MessageLog { Title = "Sent", Message = $"T: {Topic}, P: {Payload}", Severity = Severity.Success });
+        //logs.AddMessage(new MessageLog { Title = "Sent", Message = $"T: {Topic}, P: {Payload}", Severity = Severity.Success });
+        
+
+    }
+
+    async Task StartSubscrible()
+    {
+        var message = new MessageLog { Title = "Start Subscrible", Message = $"T: {Topic}", Severity = Severity.Info };
+        //logListComponent.AddMessage(message);
+
+        await mqttHubService.SubscribeTopic(Topic);
+        MessagesLog.Add(new MessageLog
+            {
+                Title = "Start Subscrible",
+                Message = $"T: {Topic}",
+                Severity = Severity.Info
+            });
+
+
+    }
+
+
+
+    private async Task SetTemperature()
+    {
+
+        temperatureDto.Temperature = Temperature;
+        var mqttDataDto = new MqttDataDto { mqttTypePackage = MqttTypePackage.Temperature, Data = JsonConvert.SerializeObject(temperatureDto) };
+        var payload = new MqttMessageDto { Topic = Topic, Payload = JsonConvert.SerializeObject(mqttDataDto) };
+
+        await mqttHubService.SendMessage(payload);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task SetLight()
+    {
+        var lightDto = new LightDto { LightStatus = LightStatus, LightIntensity = LightIntensity };
+
+        //for responsive design - mqtt message send and subscrible the same topic
+        lightDto.LightStatus = _LightStatusSimulate;
+        _LightStatusSimulate = !_LightStatusSimulate;
+
+        var mqttDataDto = new MqttDataDto { mqttTypePackage = MqttTypePackage.Light, Data = JsonConvert.SerializeObject(lightDto) };
+        var payload = new MqttMessageDto { Topic = Topic, Payload = JsonConvert.SerializeObject(mqttDataDto) };
+
+        await mqttHubService.SendMessage(payload);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task SetHumidity()
+    {
+
+        var humidityDto = new HumidityDto { Humidity = Humidity };
+        var mqttDataDto = new MqttDataDto { mqttTypePackage = MqttTypePackage.Humidity, Data = JsonConvert.SerializeObject(humidityDto) };
+        var payload = new MqttMessageDto { Topic = Topic, Payload = JsonConvert.SerializeObject(mqttDataDto) };
+
+        await mqttHubService.SendMessage(payload);
+
+        await Task.CompletedTask;
+    }
+
+
+    private async Task SetFan()
+    {
+        var fanDto = new FanDto { FanStatus = FanStatus, FanSpeed = FanSpeed };
+
+        //for responsive design - mqtt message send and subscrible the same topic
+        fanDto.FanStatus = _FanStatusSimulate;
+        _FanStatusSimulate = !_FanStatusSimulate;
+
+        var mqttDataDto = new MqttDataDto { mqttTypePackage = MqttTypePackage.Fan, Data = JsonConvert.SerializeObject(fanDto) };
+
+        var payload = new MqttMessageDto { Topic = Topic, Payload = JsonConvert.SerializeObject(mqttDataDto) };
+        await mqttHubService.SendMessage(payload);
+        await Task.CompletedTask;
+    }
+
+    private void ClearConsole()
+    {
+        MessagesLog.Clear();
+    }
+
+    private void OnEditClick()
+    {
+        State = "edit";
+        StateHasChanged();
+    }
+
+    private void OnLockClick()
+    {
+
+        State = "lock";
+        StateHasChanged();
+    }
+
+    private void OnNormalClick()
+    {
+        State = "normal";
+        StateHasChanged();
+    }
+
+    private void OnStateChanged(string newState)
+    {
+        State = newState; // Aktualizacja stanu w nadrzędnym komponencie
+    }
+}

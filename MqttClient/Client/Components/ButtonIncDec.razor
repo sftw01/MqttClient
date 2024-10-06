@@ -1,0 +1,139 @@
+﻿
+<MudItem xs="12" sm="6" md="6">
+        <MudPaper Elevation="3" Class="pa-4" Style="height: 180px; background-color: #2f3030; position: relative;">
+        @if(State == "edit" || State == "lock")
+        {
+            <MudGrid Style="opacity: 0.2;">
+
+                <MudItem xs="4" Style="display: flex;">
+                    @if (Status)
+                    {
+                        <span class="material-symbols-outlined" style="color: @ColorOff; font-size: 140px; margin-right: 10px;">@IconOff</span>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined" style="color: @ColorOn; font-size: 140px; margin-right: 10px;">@IconOn</span>
+                    }
+                </MudItem>
+
+                <MudItem xs="4" Style="display: flex; justify-content: flex-end;">
+                    <div style="display: flex; justify-content: center; align-items: center; height: 100%; ;">
+                        <MudText Style="font-size: 1.9rem; font-weight: bold;">@Value.ToString()@Sufix</MudText>
+                    </div>
+
+                </MudItem>
+
+                <MudItem xs="4" Style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Dark" Style="margin-bottom: 10px;">
+                        <span class="material-symbols-outlined" style="font-size: 55px;">add</span>
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Dark" Style="margin-top: 10px;">
+                        <span class="material-symbols-outlined" style="font-size: 55px;">remove</span>
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        } else
+        {
+            <MudGrid>
+              
+                    <MudItem xs="4" Style="display: flex;">
+                        @if (Status)
+                        {
+                            <span class="material-symbols-outlined" style="color: @ColorOff; font-size: 140px; margin-right: 10px;">@IconOff</span>
+                        }
+                        else
+                        {
+                            <span class="material-symbols-outlined" style="color: @ColorOn; font-size: 140px; margin-right: 10px;">@IconOn</span>
+                        }
+                    </MudItem>
+
+                    <MudItem xs="4" Style="display: flex; justify-content: flex-end;">
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; ;">
+                            <MudText Style="font-size: 2.7rem; font-weight: bold;">@Value.ToString()@Sufix</MudText>
+                        </div>
+
+                    </MudItem>
+
+                    <MudItem xs="4" Style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Dark" Style="margin-bottom: 10px;" OnClick="IncClick">
+                            <span class="material-symbols-outlined" style="font-size: 55px;">add</span>
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Dark" Style="margin-top: 10px;" OnClick="DecClick">
+                            <span class="material-symbols-outlined" style="font-size: 55px;">remove</span>
+                        </MudButton>
+                    </MudItem>
+            
+            </MudGrid>
+        }
+
+        @if (State == "edit")
+        {
+            <span class="material-symbols-outlined" style="position: absolute; top: 0px; left: 0px; color: #2f3030; font-size: 80px; cursor: pointer; background-color: #adadad; border: 2px solid white; border-radius: 50%; padding: 5px;">
+                edit
+            </span>
+        }
+
+        @if (State == "lock")
+        {
+            <span class="material-symbols-outlined" style="position: absolute; top: 0px; right: 0px; color: #2f3030; font-size: 80px; cursor: pointer; background-color: #adadad; border: 2px solid white; border-radius: 50%; padding: 5px;">
+                lock
+            </span>
+        }
+
+        </MudPaper>
+
+</MudItem>
+
+
+@code {
+    [Parameter]
+    public string State { get; set; }
+    [Parameter]
+    public bool Status { get; set; }
+    [Parameter]
+    public int Value { get; set; } = 27;
+    [Parameter]
+    public string Sufix { get; set; } = "°C";
+
+    [Parameter]
+    public string? IconOn { get; set; } = "thermometer";
+    [Parameter]
+    public string? IconOff { get; set; } = "pause_circle";
+    [Parameter]
+    public string? TextOff { get; set; } = "On";
+    [Parameter]
+    public string? TextOn { get; set; } = "Off";
+    [Parameter]
+    public string ColorOn { get; set; } = "#fc4103";
+    [Parameter]
+    public string ColorOff { get; set; } = "yellow";
+
+    [Parameter]
+    public EventCallback<bool> StatusChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> StateChanged { get; set; }
+
+
+    private async Task ChangeStateAsync(string newState)
+    {
+        State = newState;
+        await StateChanged.InvokeAsync(newState); // Wywołanie eventu zmiany stanu
+        StateHasChanged(); // Ponowne renderowanie komponentu
+    }
+
+    private async Task IncClick()
+    {
+        Value++;
+ 
+    }
+
+    private void DecClick()
+    {
+        Value--;
+    }
+
+
+}

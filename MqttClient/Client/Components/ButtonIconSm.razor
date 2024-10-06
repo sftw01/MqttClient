@@ -1,0 +1,73 @@
+﻿
+<MudItem xs="6" sm="3" md="3">
+    <MudPaper Elevation="3" Class="pa-4" Style="height: 180px; background-color: #2f3030; position: relative;">
+        @* for split the screen in two parts - when enable and disable *@
+        @if (State == "edit" || State == "lock")
+        {
+            <MudGrid Style="opacity: 0.2;">
+                <MudItem xs="6" Style="display: flex; align-items: center;">
+                    <span class="material-symbols-outlined" style="color: @Color; font-size: 140px; margin-right: 10px;">@Icon</span>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="6" Style="display: flex; align-items: center;">
+                    <span class="material-symbols-outlined" style="color: @Color; font-size: 140px; margin-right: 10px;">@Icon</span>
+                </MudItem>
+            </MudGrid>
+
+        }
+
+
+
+        @if (State == "edit")
+        {
+            <span class="material-symbols-outlined" style="position: absolute; top: 0px; left: 0px; color: #2f3030; font-size: 80px; cursor: pointer; background-color: #adadad; border: 2px solid white; border-radius: 50%; padding: 5px;">
+                edit
+            </span>
+        }
+
+        @if (State == "lock")
+        {
+            <span class="material-symbols-outlined" style="position: absolute; top: 0px; right: 0px; color: #2f3030; font-size: 80px; cursor: pointer; background-color: #adadad; border: 2px solid white; border-radius: 50%; padding: 5px;">
+                lock
+            </span>
+        }
+
+    </MudPaper>
+
+</MudItem>
+
+
+
+
+
+@code {
+
+    [Parameter]
+    public string State { get; set; } = "normal";
+    [Parameter]
+    public string? Icon { get; set; } = "play_circle";
+    [Parameter]
+    public string Color { get; set; } = "yellow";
+
+    [Parameter]
+    public EventCallback<bool> StatusChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> StateChanged { get; set; }
+
+    private async Task ChangeStateAsync(string newState)
+    {
+        State = newState;
+        await StateChanged.InvokeAsync(newState); // Wywołanie eventu zmiany stanu
+        StateHasChanged(); // Ponowne renderowanie komponentu
+    }
+
+
+
+
+
+}

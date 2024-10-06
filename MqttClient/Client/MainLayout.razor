@@ -1,0 +1,49 @@
+﻿@inherits LayoutComponentBase
+
+
+
+<MudThemeProvider IsDarkMode="darkMode" />
+<MudPopoverProvider /> 
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="0">
+        @* <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" /> *@
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Custom.Uncategorized.Radioactive" Color="Color.Inherit" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary">Login</MudButton>
+        <MudToggleIconButton @bind-Toggled="darkMode" Icon="@Icons.Material.Filled.LightMode" Color="Color.Inherit" ToggledIcon="@Icons.Material.Filled.DarkMode" ToggledColor="@Color.Inherit" />
+    </MudAppBar>
+
+
+    <MudDrawer @bind-Open="@drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="0">
+        <MudPaper Width="250px" Elevation="10" Class="py-2">
+            <MudNavMenu Margin="Margin.Dense" Color="Color.Success">
+                <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.Prefix" Href="/MqttClient" Icon="@Icons.Material.Filled.Storage">Mqtt Client</MudNavLink>
+
+            </MudNavMenu>
+        </MudPaper>
+    </MudDrawer>
+
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+
+</MudLayout>
+
+@code {
+    private bool drawerOpen = true;
+    bool darkMode = false;
+
+    void ToggleDrawer()
+    {
+        drawerOpen = !drawerOpen;
+    }
+
+    void ToggleDarkMode()
+    {
+        darkMode = !darkMode;
+    }
+}
